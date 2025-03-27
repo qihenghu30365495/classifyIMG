@@ -117,7 +117,9 @@ public class ImageOrganizerGUI extends JFrame {
             }
 
             executeBtn.setEnabled(false);
+            fileProcessorService.resetCounters();
             progressBar.setValue(0);
+            progressBar.setString("0%");
             logArea.setText("");
             // 重置计时器
             if (timer != null) {
@@ -177,6 +179,7 @@ public class ImageOrganizerGUI extends JFrame {
     public void updateProgress(int progress) {
         SwingUtilities.invokeLater(() -> {
             progressBar.setValue(progress);
+            progressBar.setString(progress + "%");
         });
     }
 

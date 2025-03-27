@@ -28,6 +28,11 @@ public class FileProcessorService {
         this.directoryService = new DirectoryService();
     }
 
+    public void resetCounters() {
+        totalFiles = 0;
+        processedFiles = 0;
+    }
+
     public void processFiles(String path, String outputPath, boolean classifyByHoliday, boolean processSubfolders, boolean overwriteDuplicates) throws IOException {
         counters.put("total", 0);
         counters.put("standard", 0);

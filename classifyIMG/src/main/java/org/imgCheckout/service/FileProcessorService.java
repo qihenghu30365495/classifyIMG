@@ -14,9 +14,13 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.*;
 
 public class FileProcessorService {
 
+    private static final ExecutorService holidayQueryExecutor = Executors.newFixedThreadPool(10);
     private static final Map<String, Integer> counters = new HashMap<>();
     private int totalFiles = 0;
     private int processedFiles = 0;
@@ -153,7 +157,10 @@ public class FileProcessorService {
         }
 
         if (classifyByHoliday) {
-            String dayType = HolidayUtils.isHoliday(date) ? "节假日" : "工作日";
+            Set<LocalDate> datesToCheck = new HashSet<>();
+            datesToCheck.add(date);
+        Map<LocalDate, Boolean> holidayMap = HolidayUtils.batchCheckHolidays(datesToCheck);
+        String dayType = holidayMap.get(date) ? "节假日" : "工作日";
             Path dayTypePath = monthPath.resolve(dayType);
             if (directoryService.createDirectory(dayTypePath, gui)) {
                 gui.updateLog("创建文件夹: " + dayTypePath);

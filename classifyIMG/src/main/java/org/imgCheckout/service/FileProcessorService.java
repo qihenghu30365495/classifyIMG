@@ -64,7 +64,7 @@ public class FileProcessorService {
         if (processSubfolders) {
             processFilesRecursively(inputPath, classifyByHoliday, overwriteDuplicates, rootPath);
         } else {
-            try (DirectoryStream<Path> processStream = Files.newDirectoryStream(rootPath)) {
+            try (DirectoryStream<Path> processStream = Files.newDirectoryStream(inputPath)) {
                 for (Path filePath : processStream) {
                     if (Files.isRegularFile(filePath)) {
                         processFile(filePath, rootPath, classifyByHoliday, overwriteDuplicates);

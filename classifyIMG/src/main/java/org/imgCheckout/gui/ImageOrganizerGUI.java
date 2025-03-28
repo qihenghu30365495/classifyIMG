@@ -34,7 +34,7 @@ public class ImageOrganizerGUI extends JFrame {
     }
 
     private void initUI() {
-        setTitle("图片视频整理工具（^.^）        PowerBy - FIRELOVER");
+        setTitle("图片视频整理工具（^.^）        PowerBy - 划船不用船桨");
         setSize(800, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);

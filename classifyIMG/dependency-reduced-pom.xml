@@ -46,6 +46,7 @@
             </goals>
             <configuration>
               <headerType>gui</headerType>
+              <icon>src/main/resources/img/img-01.ico</icon>
               <outfile>target/${project.artifactId}.exe</outfile>
               <jar>target/${project.artifactId}-${project.version}.jar</jar>
               <versionInfo>

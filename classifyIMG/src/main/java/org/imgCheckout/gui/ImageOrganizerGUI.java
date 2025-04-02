@@ -124,7 +124,7 @@ public class ImageOrganizerGUI extends JFrame {
             // 重置计时器
             if (timer != null) {
                 timer.stop();
-                timerLabel.setText("处理时间：00:00:00");
+                timerLabel.setText("处理时间：00:00:000");
             }
 
             boolean classifyByHoliday = classifyByHolidayCheckbox.isSelected();

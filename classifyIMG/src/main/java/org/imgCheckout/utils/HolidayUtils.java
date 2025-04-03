@@ -1,65 +1,48 @@
 package org.imgCheckout.utils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import org.json.JSONObject;
-import java.util.concurrent.*;
 import java.util.*;
 
 public class HolidayUtils {
-    private static final String API_URL = "https://api.jiejiariapi.com/v1/is_holiday";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final ExecutorService executor = Executors.newFixedThreadPool(20);
-    
+    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/holiday?useSSL=false&serverTimezone=UTC";
+    private static final String USER = "root";
+    private static final String PASSWORD = "123456";
+
     public static Map<LocalDate, Boolean> batchCheckHolidays(Set<LocalDate> dates) {
-        Map<LocalDate, Boolean> results = new ConcurrentHashMap<>();
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        Map<LocalDate, Boolean> results = new HashMap<>();
         
-        for (LocalDate date : dates) {
-            futures.add(CompletableFuture.runAsync(() -> {
-                try {
-                    boolean isHoliday = isHoliday(date);
-                    results.put(date, isHoliday);
-                    TimeUnit.MILLISECONDS.sleep(50); // 控制请求频率
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+        try (Connection conn = DriverManager.getConnection(JDBC_URL, USER, PASSWORD)) {
+            String sql = "SELECT date, is_holiday FROM holidays WHERE date IN (" + 
+                String.join(",", Collections.nCopies(dates.size(), "?")) + ")";
+            
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                int index = 1;
+                for (LocalDate date : dates) {
+                    pstmt.setString(index++, date.format(DATE_FORMATTER));
                 }
-            }, executor));
-        }
-        
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-        return results;
-    }
-
-    public static boolean isHoliday(LocalDate date) {
-        String dateStr = date.format(DATE_FORMATTER);
-        String apiUrlWithDate = API_URL + "?date=" + dateStr;
-        try {
-            URL url = new URL(apiUrlWithDate);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
+                
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    LocalDate resultDate = LocalDate.parse(rs.getString("date"), DATE_FORMATTER);
+                    boolean isHoliday = "true".equalsIgnoreCase(rs.getString("is_holiday"));
+                    results.put(resultDate, isHoliday);
                 }
-                reader.close();
-
-                JSONObject jsonResponse = new JSONObject(response.toString());
-                return jsonResponse.getBoolean("is_holiday");
             }
-        } catch (IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        
+        // 补充未查询到的日期默认值
+        for (LocalDate date : dates) {
+            results.putIfAbsent(date, false);
+        }
+        return results;
     }
 }
